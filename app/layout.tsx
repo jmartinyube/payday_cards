@@ -15,7 +15,8 @@ import { CgPokemon } from "react-icons/cg";
 import { GiPirateSkull, GiMagicGate } from "react-icons/gi";
 import { SiInstagram, SiTiktok, SiX } from "react-icons/si";
 import { useEffect, useState, useRef } from "react";
-import { usePathname, useSearchParams } from "next/navigation";
+//import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname } from "next/navigation";
 
 
 /* ================= ROOT LAYOUT ================= */
@@ -153,8 +154,8 @@ function SideBar() {
   const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const activeType = searchParams.get("type");
+  //const searchParams = useSearchParams();
+  //const activeType = searchParams.get("type");
 
   useEffect(() => {
     const toggle = () => setMobileOpen((p) => !p);
@@ -287,45 +288,7 @@ function SideBar() {
               </Link>
 
               {/* Subcategorías */}
-              {hovered && openCategory === name && (
-                <div
-                  className="
-                    absolute
-                    left-16
-                    top-16
-                    min-w-[220px]
-                    bg-black/20
-                    backdrop-blur-sm
-                    rounded-md
-                    shadow-lg
-                    py-2
-                    z-50
-                  "
-                >
-                  {subs.map((sub) => {
-                    const isActiveSub =
-                      pathname === `/collections/${handle}` &&
-                      activeType === sub.tag;
-
-                    return (
-                      <Link
-                        key={sub.tag}
-                        href={`/collections/${handle}?type=${sub.tag}`}
-                        className={`
-                          block px-4 py-2 text-sm transition-colors
-                          ${
-                            isActiveSub
-                              ? "text-[var(--accent-green)] font-semibold"
-                              : "hover:text-[var(--accent-green)]"
-                          }
-                        `}
-                      >
-                        {sub.label}
-                      </Link>
-                    );
-                  })}
-                </div>
-              )}
+             
             </div>
           );
         })}
