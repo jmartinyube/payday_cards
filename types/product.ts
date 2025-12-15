@@ -1,7 +1,8 @@
-export type Product = {
+export type ShopifyProductRaw = {
   id: string;
   title: string;
-  handle: string; // 👈 AÑADIR
+  handle: string;
+  tags?: string[];
   images: {
     edges: { node: { url: string } }[];
   };
@@ -11,4 +12,13 @@ export type Product = {
       currencyCode: string;
     };
   };
+};
+
+export type Product = {
+  id: string;
+  title: string;
+  handle: string;
+  image: string;
+  price: string;
+  currency: string;
 };

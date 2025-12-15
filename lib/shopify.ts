@@ -1,28 +1,68 @@
 const domain = process.env.SHOPIFY_STORE_DOMAIN!;
 const token = process.env.SHOPIFY_STOREFRONT_TOKEN!;
 
-export async function shopify(query: string, variables: Record<string, any> = {}) {
-  const endpoint = `https://${domain}/api/2024-07/graphql.json`;
+async function fetchWithTimeout(
+  url: string,
+  options: RequestInit,
+  timeout = 8000
+) {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeout);
 
-  const res = await fetch(endpoint, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Shopify-Storefront-Access-Token": token,
-    },
-    body: JSON.stringify({ query, variables }),
-  });
-
-  const json = await res.json();
-  if (json.errors) {
-    console.error("Shopify API Errors:", json.errors);
-    throw new Error("Error desde Shopify API");
+  try {
+    return await fetch(url, {
+      ...options,
+      signal: controller.signal,
+    });
+  } finally {
+    clearTimeout(id);
   }
-
-  return json.data;
 }
 
-export async function getProducts() {
+export async function shopify(
+  query: string,
+  variables: Record<string, any> = {},
+  retries = 2
+) {
+  const endpoint = `https://${domain}/api/2024-07/graphql.json`;
+
+  try {
+    const res = await fetchWithTimeout(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Shopify-Storefront-Access-Token": token,
+      },
+      body: JSON.stringify({ query, variables }),
+      cache: "no-store",
+    });
+
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}`);
+    }
+
+    const json = await res.json();
+
+    if (json.errors) {
+      console.error("Shopify API Errors:", json.errors);
+      throw new Error("Error desde Shopify API");
+    }
+
+    return json.data;
+  } catch (error) {
+    if (retries > 0) {
+      console.warn("Retry Shopify fetch...", retries);
+      await new Promise((r) => setTimeout(r, 500));
+      return shopify(query, variables, retries - 1);
+    }
+
+    console.error("Shopify fetch failed:", error);
+    throw error;
+  }
+}
+
+
+export async function getProducts(): Promise<Product[]> {
   const query = `
     query {
       products(first: 20) {
@@ -31,9 +71,7 @@ export async function getProducts() {
             id
             title
             handle
-            images(first: 1) {
-              edges { node { url } }
-            }
+            images(first: 1) { edges { node { url } } }
             priceRange { minVariantPrice { amount currencyCode } }
           }
         }
@@ -41,8 +79,20 @@ export async function getProducts() {
     }
   `;
   const data = await shopify(query);
-  return data.products.edges.map((edge: any) => edge.node);
+
+  return data.products.edges.map((edge: any) => {
+    const p = edge.node;
+    return {
+      id: p.id,
+      title: p.title,
+      handle: p.handle,
+      image: p.images.edges[0]?.node.url || "/placeholder.png",
+      price: p.priceRange.minVariantPrice.amount,
+      currency: p.priceRange.minVariantPrice.currencyCode,
+    };
+  });
 }
+
 
 export async function getProduct(handle: string) {
   if (!handle) throw new Error("Handle no definido");
@@ -69,10 +119,14 @@ export async function getProduct(handle: string) {
 // Obtener productos de una colección (por handle)
 // Opcionalmente filtrar por tag (subcategoría)
 
+import type { ShopifyProductRaw, Product } from "@/types/product";
+
 export async function getCollectionProducts(
   handle: string,
-  type?: string
-) {
+  tag?: string
+): Promise<Product[]> {
+  if (!handle) return [];
+
   const query = `
     query getCollectionProducts($handle: String!) {
       collection(handle: $handle) {
@@ -82,6 +136,7 @@ export async function getCollectionProducts(
               id
               title
               handle
+              tags
               images(first: 1) {
                 edges {
                   node {
@@ -95,7 +150,6 @@ export async function getCollectionProducts(
                   currencyCode
                 }
               }
-              tags
             }
           }
         }
@@ -105,17 +159,15 @@ export async function getCollectionProducts(
 
   const data = await shopify(query, { handle });
 
-  let products =
+  let products: ShopifyProductRaw[] =
     data.collection?.products.edges.map((e: any) => e.node) || [];
 
-  // Filtro por subcategoría (tags)
-  if (type) {
-    products = products.filter((p: any) =>
-      p.tags?.includes(type)
-    );
+  // ✅ Filtro por subcategoría (tags)
+  if (tag) {
+    products = products.filter((p) => p.tags?.includes(tag));
   }
 
-  return products.map((p: any) => ({
+  return products.map((p) => ({
     id: p.id,
     title: p.title,
     handle: p.handle,

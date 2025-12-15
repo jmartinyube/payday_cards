@@ -15,8 +15,7 @@ import { CgPokemon } from "react-icons/cg";
 import { GiPirateSkull, GiMagicGate } from "react-icons/gi";
 import { SiInstagram, SiTiktok, SiX } from "react-icons/si";
 import { useEffect, useState, useRef } from "react";
-//import { usePathname, useSearchParams } from "next/navigation";
-import { usePathname } from "next/navigation";
+import { usePathname } from "next/navigation"; // IMP Cambiar el useSearchParams (estropea el build)
 
 
 /* ================= ROOT LAYOUT ================= */
@@ -154,8 +153,16 @@ function SideBar() {
   const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const pathname = usePathname();
-  //const searchParams = useSearchParams();
-  //const activeType = searchParams.get("type");
+  const segments = pathname.split("/").filter(Boolean);
+
+  const activeCollection =
+    segments[0] === "collections" ? segments[1] : null;
+
+  const activeSubcategory =
+    segments[0] === "collections" && segments.length >= 3
+      ? segments[2]
+      : null;
+
 
   useEffect(() => {
     const toggle = () => setMobileOpen((p) => !p);
@@ -247,7 +254,8 @@ function SideBar() {
         </Link>
 
         {categories.map(({ name, icon: Icon, handle, subs }) => {
-          const isActiveCollection = pathname === `/collections/${handle}`;
+          const isActiveCollection = 
+            activeCollection === handle;
 
           return (
             <div
@@ -288,7 +296,45 @@ function SideBar() {
               </Link>
 
               {/* Subcategorías */}
-             
+              {hovered && openCategory === name && (
+                <div
+                  className="
+                    absolute
+                    left-16
+                    top-16
+                    min-w-[220px]
+                    bg-black/20
+                    backdrop-blur-sm
+                    rounded-md
+                    shadow-lg
+                    py-2
+                    z-50
+                  "
+                >
+                  {subs.map((sub) => {
+                  const isActiveSub =
+                    activeCollection === handle &&
+                    activeSubcategory === sub.tag;
+
+                    return (
+                      <Link
+                        key={sub.tag}
+                        href={`/collections/${handle}/${sub.tag}`}
+                        className={`
+                          block px-4 py-2 text-sm transition-colors
+                          ${
+                            isActiveSub
+                              ? "text-[var(--accent-green)] font-semibold"
+                              : "hover:text-[var(--accent-green)]"
+                          }
+                        `}
+                      >
+                        {sub.label}
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           );
         })}

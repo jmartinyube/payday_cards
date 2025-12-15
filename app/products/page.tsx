@@ -4,7 +4,7 @@ import { getProducts } from "@/lib/shopify";
 import { Product } from "@/types/product";
 
 function getProductImage(product: Product) {
-  return product.images.edges[0]?.node.url || "/placeholder.png";
+  return product.image || "/placeholder.png";
 }
 
 export default async function ProductsPage() {
@@ -30,8 +30,8 @@ export default async function ProductsPage() {
             />
             <h2 className="text-xl font-bold">{product.title}</h2>
             <p className="text-gray-600">
-              {product.priceRange.minVariantPrice.amount}{" "}
-              {product.priceRange.minVariantPrice.currencyCode}
+              {product.price}
+              {product.currency}
             </p>
           </div>
         </Link>

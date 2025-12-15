@@ -2,18 +2,15 @@ import { getCollectionProducts } from "@/lib/shopify";
 import Link from "next/link";
 
 type PageProps = {
-  params: Promise<{ handle: string }>;
-  searchParams: Promise<{ type?: string }>;
+  params: Promise<{
+    handle: string;
+  }>;
 };
 
-export default async function CollectionPage({
-  params,
-  searchParams,
-}: PageProps) {
+export default async function CollectionPage({ params }: PageProps) {
   const { handle } = await params;
-  const { type } = await searchParams;
 
-  const products = await getCollectionProducts(handle, type);
+  const products = await getCollectionProducts(handle);
 
   if (!products || products.length === 0) {
     return (
@@ -37,9 +34,7 @@ export default async function CollectionPage({
             className="rounded mb-4"
           />
           <h2 className="text-lg font-bold">{product.title}</h2>
-          <p>
-            {product.price} {product.currency}
-          </p>
+          <p>{product.price} {product.currency}</p>
         </Link>
       ))}
     </div>
