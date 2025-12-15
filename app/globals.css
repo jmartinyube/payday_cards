@@ -1,26 +1,63 @@
 @import "tailwindcss";
 
+/* Fuente Osaka desde public/fonts */
+@font-face {
+  font-family: "Osaka";
+  src: url("/fonts/osaka-re.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Fuente Japanese 3017 desde public/fonts */
+@font-face {
+  font-family: "Japanese 3017";
+  src: url("/fonts/japanese-3017.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Colores base */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #FFF8F0; /* Fondo claro */
+  --foreground: #6B4B1D; /* Texto principal */
+  --accent-red: #C0392B; /* Botones, detalles */
+  --accent-green: #2a9c5a; /* Iconos complementarios */
+  --accent-yellow: #F6C94C; /* Detalles secundarios */
 }
 
+/* Sistema tipográfico */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-family-body: "Japanese 3017", sans-serif;
+  --font-family-heading: "Japanese 3017", sans-serif;
+
+  --text-heading-1: 2.5rem;
+  --text-heading-2: 2rem;
+  --text-heading-3: 1.5rem;
+
+  --text-body-lg: 1.125rem;
+  --text-body-md: 1rem;
+  --text-body-sm: 0.875rem;
+
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-bold: 700;
 }
 
+/* Modo oscuro */
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #1C1C1C;
+    --foreground: #F6C94C;
+    --accent-green: #27AE60;
   }
 }
 
+/* Base global */
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-family-body);
+  font-size: var(--text-body-md);
 }
