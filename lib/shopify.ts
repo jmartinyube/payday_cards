@@ -162,7 +162,7 @@ export async function getCollectionProducts(
   let products: ShopifyProductRaw[] =
     data.collection?.products.edges.map((e: any) => e.node) || [];
 
-  // ✅ Filtro por subcategoría (tags)
+  // Filtro por subcategoría (tags)
   if (tag) {
     products = products.filter((p) => p.tags?.includes(tag));
   }
@@ -175,4 +175,52 @@ export async function getCollectionProducts(
     price: p.priceRange.minVariantPrice.amount,
     currency: p.priceRange.minVariantPrice.currencyCode,
   }));
+}
+
+// Carrito 
+export async function getCart(cartId: string) {
+  const query = `
+    query getCart($id: ID!) {
+      cart(id: $id) {
+        id
+        checkoutUrl
+        totalQuantity
+        cost {
+          totalAmount {
+            amount
+            currencyCode
+          }
+        }
+        lines(first: 50) {
+          edges {
+            node {
+              id
+              quantity
+              cost {
+                totalAmount {
+                  amount
+                }
+              }
+              merchandise {
+                ... on ProductVariant {
+                  id
+                  title
+                  image {
+                    url
+                  }
+                  product {
+                    title
+                  }
+                  price {
+                    amount
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  `;
+  return shopify(query, { id: cartId });
 }

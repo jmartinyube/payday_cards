@@ -15,7 +15,7 @@ import { CgPokemon } from "react-icons/cg";
 import { GiPirateSkull, GiMagicGate } from "react-icons/gi";
 import { SiInstagram, SiTiktok, SiX } from "react-icons/si";
 import { useEffect, useState, useRef } from "react";
-import { usePathname } from "next/navigation"; // IMP Cambiar el useSearchParams (estropea el build)
+import { usePathname } from "next/navigation"; 
 
 
 /* ================= ROOT LAYOUT ================= */
@@ -122,13 +122,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 /* ================= CART ICON ================= */
 
 function CartIcon() {
-  const { cart } = useCart();
-  const totalItems = cart.reduce((s, i) => s + i.quantity, 0);
+  const { totalQuantity } = useCart();
 
   return (
     <Link href="/cart" className="relative">
       <ShoppingCart size={24} />
-      {totalItems > 0 && (
+      {totalQuantity > 0 && (
         <span
           className="absolute -top-2 -right-2 w-5 h-5 text-xs flex items-center justify-center rounded-full"
           style={{
@@ -136,12 +135,15 @@ function CartIcon() {
             color: "var(--background)",
           }}
         >
-          {totalItems}
+          {totalQuantity}
         </span>
       )}
     </Link>
   );
 }
+
+
+
 
 /* ================= SIDEBAR ================= */
 
@@ -283,7 +285,7 @@ function SideBar() {
                 }`}
               >
                 <div className="w-16 h-16 flex items-center justify-center shrink-0">
-                  <Icon size={20} />
+                  <Icon size={24} />
                 </div>
 
                 <span
