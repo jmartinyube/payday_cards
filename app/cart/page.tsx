@@ -8,7 +8,7 @@ export default function CartPage() {
   const [stockWarning, setStockWarning] = useState<string | null>(null);
 
   if (!cart || !cart.lines.length) {
-    return <p className="p-10">Tu carrito esta vacío.</p>;
+    return <p className="p-10">Tu carrito está vacío.</p>;
   }
 
   const total = cart.lines.reduce(
@@ -27,8 +27,7 @@ export default function CartPage() {
 
   const handleDecrease = (item: CartLine) => {
     if (item.quantity <= 1) {
-      // Si llega a 0 o 1 y se pulsa "-", eliminar línea
-      removeLine(item.id);
+      removeLine(item.id); // eliminar si llega a 0 o 1
       return;
     }
     updateQuantity(item.id, item.quantity - 1);
@@ -89,6 +88,7 @@ export default function CartPage() {
     </div>
   );
 }
+
 
 
 

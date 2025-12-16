@@ -48,20 +48,17 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   }, [cartId]);
 
-  // Transformar carrito Shopify en formato plano
   const transformCart = (shopifyCart: any): Cart => {
     const lines: CartLine[] =
       shopifyCart.lines?.edges?.map((edge: any) => {
         const item = edge.node.merchandise;
 
-        // Obtener el título correcto
         const title =
           item.product?.title && item.product.title !== "Default Title"
             ? item.product.title
             : item.title || "Producto";
 
-        // Obtener stock real
-        const maxQuantity = item.quantityAvailable !== undefined ? item.quantityAvailable : 99;
+        const maxQuantity = item.quantityAvailable ?? 1;
 
         return {
           id: edge.node.id,
@@ -92,7 +89,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     };
   };
 
-  // Refrescar carrito
   async function refreshCart() {
     if (!cartId) return;
     try {
@@ -109,7 +105,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  // Añadir al carrito
   async function addToCart(variantId: string, quantity = 1) {
     try {
       const existingLine = cart?.lines.find((l) => l.variantId === variantId);
@@ -142,10 +137,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  // Actualizar cantidad
   async function updateQuantity(lineId: string, quantity: number) {
     if (!cartId) return;
-
     const line = cart?.lines.find((l) => l.id === lineId);
     if (!line) return;
 
@@ -155,7 +148,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
 
     if (quantity <= 0) {
-      removeLine(lineId); // elimina si llega a 0
+      removeLine(lineId);
       return;
     }
 
@@ -168,7 +161,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     refreshCart();
   }
 
-  // Eliminar línea
   async function removeLine(lineId: string) {
     if (!cartId) return;
     await fetch("/api/cart/lines/remove", {
@@ -179,7 +171,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     refreshCart();
   }
 
-  // Abrir checkout
   const openCheckout = () => {
     if (cart?.checkoutUrl) window.location.href = cart.checkoutUrl;
   };
@@ -200,6 +191,14 @@ export function useCart() {
   if (!context) throw new Error("useCart debe usarse dentro de un CartProvider");
   return context;
 }
+
+
+
+
+
+
+
+
 
 
 

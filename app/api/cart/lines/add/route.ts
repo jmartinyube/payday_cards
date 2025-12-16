@@ -21,6 +21,7 @@ export async function POST(req: Request) {
                     title
                     priceV2 { amount currencyCode }
                     image { url }
+                    quantityAvailable
                   }
                 }
               }
