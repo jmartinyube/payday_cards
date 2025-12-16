@@ -103,28 +103,17 @@ export async function getProduct(handle: string) {
         id
         title
         description
-        images(first: 10) {             # traer hasta 10 imágenes
-          edges { 
-            node { 
-              url 
-            } 
-          } 
-        }
-        variants(first: 10) {           # traer hasta 10 variantes
+        images(first: 5) { edges { node { url } } }
+        variants(first: 10) { 
           edges { 
             node { 
               id
               title
-              quantityAvailable         # stock disponible
+              quantityAvailable
             } 
           } 
         }
-        priceRange { 
-          minVariantPrice { 
-            amount 
-            currencyCode 
-          } 
-        }
+        priceRange { minVariantPrice { amount currencyCode } }
       }
     }
   `;
@@ -133,7 +122,6 @@ export async function getProduct(handle: string) {
   if (!data.product) return null;
   return data.product;
 }
-
 
 
 
@@ -193,11 +181,9 @@ export async function getCollectionProducts(
     title: p.title,
     handle: p.handle,
     image: p.images.edges[0]?.node.url || "/placeholder.png",
-    images: p.images.edges, // <-- añadir todas las imágenes
     price: p.priceRange.minVariantPrice.amount,
     currency: p.priceRange.minVariantPrice.currencyCode,
   }));
-
 }
 
 // Carrito 
