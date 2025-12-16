@@ -23,12 +23,13 @@ export interface Cart {
 interface CartContextType {
   cart: Cart | null;
   cartId: string | null;
-  addToCart: (variantId: string, quantity?: number) => Promise<void>;
+  addToCart: (variantId: string, quantity?: number) => Promise<{ warning?: string }>; // <--- aquí
   updateQuantity: (lineId: string, quantity: number) => Promise<void>;
   removeLine: (lineId: string) => Promise<void>;
   openCheckout: () => void;
   totalQuantity: number;
 }
+
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
@@ -108,9 +109,23 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   async function addToCart(variantId: string, quantity = 1) {
     try {
       const existingLine = cart?.lines.find((l) => l.variantId === variantId);
-      if (existingLine && existingLine.quantity + quantity > existingLine.maxQuantity) {
-        alert(`Has alcanzado el máximo stock disponible para "${existingLine.title}".`);
-        return;
+
+      if (existingLine) {
+        if (existingLine.quantity + quantity > existingLine.maxQuantity) {
+          // Retornar stock warning desde el contexto
+          return { warning: `No puedes añadir más de ${existingLine.maxQuantity} unidades de "${existingLine.title}"` };
+        }
+
+        // Actualizar cantidad localmente para evitar desfase
+        setCart((prev) => {
+          if (!prev) return prev;
+          const updatedLines = prev.lines.map((l) =>
+            l.variantId === variantId
+              ? { ...l, quantity: Math.min(l.quantity + quantity, l.maxQuantity) }
+              : l
+          );
+          return { ...prev, lines: updatedLines, totalQuantity: updatedLines.reduce((sum, l) => sum + l.quantity, 0) };
+        });
       }
 
       if (!cartId) {
@@ -122,7 +137,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         const data = await res.json();
         setCartId(data.cart.id);
         setCart(transformCart(data.cart));
-        return;
+        return {};
       }
 
       await fetch("/api/cart/lines/add", {
@@ -132,10 +147,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       });
 
       refreshCart();
+      return {};
     } catch (err) {
       console.error("Error addToCart:", err);
+      return { warning: "Error al añadir el producto al carrito." };
     }
   }
+
 
   async function updateQuantity(lineId: string, quantity: number) {
     if (!cartId) return;

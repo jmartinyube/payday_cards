@@ -104,17 +104,26 @@ export async function getProduct(handle: string) {
         title
         description
         images(first: 5) { edges { node { url } } }
-        variants(first: 1) { edges { node { id } } }
+        variants(first: 10) { 
+          edges { 
+            node { 
+              id
+              title
+              quantityAvailable
+            } 
+          } 
+        }
         priceRange { minVariantPrice { amount currencyCode } }
       }
     }
   `;
 
   const data = await shopify(query, { handle });
-
   if (!data.product) return null;
   return data.product;
 }
+
+
 
 // Obtener productos de una colección (por handle)
 // Opcionalmente filtrar por tag (subcategoría)

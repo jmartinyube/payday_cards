@@ -8,7 +8,7 @@ export default function CartPage() {
   const [stockWarning, setStockWarning] = useState<string | null>(null);
 
   if (!cart || !cart.lines.length) {
-    return <p className="p-10">Tu carrito está vacío.</p>;
+    return <p className="p-10">Tu carrito está vacio.</p>;
   }
 
   const total = cart.lines.reduce(

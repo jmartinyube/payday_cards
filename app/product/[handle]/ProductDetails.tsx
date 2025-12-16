@@ -1,12 +1,48 @@
 "use client";
 
-import { useCart } from "@/app/context/CartContext";
+import { useCart, CartLine } from "@/app/context/CartContext";
+import { useState } from "react";
 
 export default function ProductDetails({ product }: { product: any }) {
-  const { addToCart } = useCart();
+  const { cart, addToCart } = useCart();
+  const [selectedVariantId, setSelectedVariantId] = useState<string | null>(
+    product.variants?.edges?.[0]?.node.id || null
+  );
+  const [quantity, setQuantity] = useState(1);
+  const [stockWarning, setStockWarning] = useState<string | null>(null);
 
   const image = product.images?.edges?.[0]?.node?.url;
-  const firstVariant = product.variants?.edges?.[0]?.node;
+
+  const selectedVariant = product.variants?.edges?.find(
+    (v: any) => v.node.id === selectedVariantId
+  )?.node;
+
+  const maxQuantity = selectedVariant?.quantityAvailable ?? 0;
+
+  const cartLine: CartLine | undefined = cart?.lines.find(
+    (l) => l.variantId === selectedVariantId
+  );
+  const quantityInCart = cartLine?.quantity || 0;
+
+  const availableToAdd = Math.max(maxQuantity - quantityInCart, 0);
+
+  const handleAddToCart = async () => {
+    if (!selectedVariant) return;
+
+    if (quantity > availableToAdd) {
+      setStockWarning(
+        `No puedes añadir más de ${availableToAdd} unidades de "${product.title}"`
+      );
+      setTimeout(() => setStockWarning(null), 3000);
+      return;
+    }
+
+    const result = await addToCart(selectedVariant.id, quantity);
+    if (result?.warning) {
+      setStockWarning(result.warning);
+      setTimeout(() => setStockWarning(null), 3000);
+    }
+  };
 
   return (
     <div className="p-10 max-w-3xl mx-auto">
@@ -19,16 +55,61 @@ export default function ProductDetails({ product }: { product: any }) {
         {product.priceRange.minVariantPrice.currencyCode}
       </p>
 
+      {product.variants?.edges.length > 1 && (
+        <div className="mt-4">
+          <label className="font-bold mr-2">Variante:</label>
+          <select
+            value={selectedVariantId || ""}
+            onChange={(e) => {
+              setSelectedVariantId(e.target.value);
+              setQuantity(1); // reset cantidad al cambiar variante
+            }}
+            className="border px-2 py-1 rounded"
+          >
+            {product.variants.edges.map((v: any) => (
+              <option key={v.node.id} value={v.node.id}>
+                {v.node.title} (Stock: {v.node.quantityAvailable})
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      <p className="mt-2 text-sm text-gray-500">
+        Stock disponible: {availableToAdd}
+      </p>
+
+      {stockWarning && (
+        <div className="mb-4 p-3 bg-yellow-200 text-yellow-800 rounded">
+          {stockWarning}
+        </div>
+      )}
+
+      <div className="mt-4 flex items-center gap-2">
+        <label className="font-bold">Cantidad:</label>
+        <input
+          type="number"
+          min={1}
+          max={availableToAdd}
+          value={quantity}
+          onChange={(e) => setQuantity(Math.min(Math.max(1, Number(e.target.value)), availableToAdd))}
+          className="border px-2 py-1 rounded w-16"
+        />
+      </div>
+
       <p className="mt-4">{product.description}</p>
 
       <button
-        disabled={!firstVariant}
-        onClick={() => firstVariant && addToCart(firstVariant.id)}
-        className="mt-6 px-6 py-3 rounded-lg font-bold bg-[var(--accent-green)] text-[var(--background)] hover:bg-[var(--accent-yellow)]"
+        disabled={!selectedVariant || availableToAdd <= 0}
+        onClick={handleAddToCart}
+        className="mt-6 px-6 py-3 rounded-lg font-bold bg-[var(--accent-green)] text-[var(--background)] hover:bg-[var(--accent-yellow)] disabled:opacity-50 disabled:cursor-not-allowed"
       >
         Añadir al carrito
       </button>
     </div>
   );
 }
+
+
+
 
